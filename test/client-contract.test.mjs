@@ -68,9 +68,11 @@ test('没有遗留的调试上报接口（/probe、picker）', () => {
 	assert.equal(src.includes('factory-loaded'), false);
 });
 
-test('客户端只读，不写回标注文件', () => {
-	assert.equal(/\/mark\b/.test(src), false);
-	assert.equal(/method:\s*["']POST["']/.test(src), false);
+test('写操作只通过自己的 /mark 接口，不直接碰别的插件的数据文件', () => {
+	const writes = Array.from(new Set((src.match(/["'`]\/(mark|style|probe|config)["'`]/g) || [])
+		.map((w) => w.replace(/["'`]/g, ''))));
+	assert.deepEqual(writes.sort(), ['/mark', '/style']);
+	assert.equal(src.includes('annotations.v1.json'), false);
 });
 
 test('只请求本地回环地址', () => {
