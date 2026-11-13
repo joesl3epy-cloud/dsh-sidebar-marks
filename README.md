@@ -134,7 +134,7 @@ DSH 的客户端插件加载失败时，会把整个 profile 配置**重置成�
 
 ```bash
 curl -s http://127.0.0.1:49397/health
-# {"ok":true,"plugin":"dsh-sidebar-marks","version":"1.0.0","ui":"1","sessionManager":true}
+# {"ok":true,"plugin":"dsh-sidebar-marks","version":"1.1.0","ui":"1","sessionManager":true}
 
 curl -s http://127.0.0.1:49397/marks
 # {"ok":true,"installed":true,"sessions":{"session-...":{"marks":["later"],"tags":[],"priority":3}}}
@@ -156,11 +156,24 @@ curl -s http://127.0.0.1:49397/style
 
 ---
 
+## 删除会话（1.1）
+
+卡片里那个红色的「删除」点两下（一次确认）就把会话删掉。它做的事：
+
+1. 先扫一遍所有会话头，确认这条没有 `origin: "subagent"` 的子任务——**有就拒绝**，不递归删；
+2. 确认它不在内存里跑着（`ctx.sessions.get(id)` 拿得到就拒绝）；
+3. 把整个会话目录**移进** `~/.dsh/sessions/.trash/<时间戳>/<会话id>/`，不是 `rm`；
+4. 顺手清掉 `marks.json` 里对应的那条记录。
+
+删除是不可逆的界面操作，但文件还在 `.trash` 里，真删错了可以手动搬回来。
+
 ## 已知限制
 
 - **打标记的控件挂在官方的会话悬停卡片里**，卡片对应的会话 id 是从 React fiber 上反查的。
   DSH 前端结构大改时可能反查不到——认不出就不显示控件，不会把标记写到错的会话上。
 - 与 `dsh-session-manager` 是「读它的、写自己的」：我们写进去的标记它看不见（合并显示只在读的时候发生）。
+- 删除**不做批量**，也**不做子任务递归**：有子任务的会话直接拒绝，得先自己处理掉子任务。
+- **移动工作区还没做**（计划在 1.2）。
 - 依赖 React 内部属性与类名后缀；DSH 大版本升级后可能需要重新校准，届时会停止绘制而不是画错位置。
 - 只处理 DSH Desktop（`dsh-app://`），浏览器版未验证。
 - 折叠动画期间点会跟着动画元素移动，不做额外平滑。

@@ -1,7 +1,7 @@
 {
   "name": "dsh-sidebar-marks",
-  "version": "1.0.0",
-  "description": "在 DSH 侧栏会话上打收藏 / 待回看 / 标签，并在标题旁显示彩色圆点；兼容 dsh-session-manager",
+  "version": "1.1.0",
+  "description": "在 DSH 侧栏会话上打收藏 / 待回看 / 标签并显示彩色圆点，附带删除会话；兼容 dsh-session-manager",
   "type": "module",
   "license": "MIT",
   "keywords": [
