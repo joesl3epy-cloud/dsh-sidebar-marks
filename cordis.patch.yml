@@ -1,0 +1,5 @@
+# dsh-sidebar-marks bundle 层：插入侧栏标记插件行。
+- insert:
+    - id: dsh-sidebar-marks
+      name: 'dsh-sidebar-marks'
+      config: {}

@@ -1,0 +1,65 @@
+{
+  "name": "dsh-sidebar-marks",
+  "version": "0.9.0",
+  "description": "在 DSH 侧栏会话标题旁显示收藏 / 待回看 / 标签的彩色圆点（配合 dsh-session-manager 使用）",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek-harness-plugin",
+    "sidebar",
+    "session",
+    "marks",
+    "favorites",
+    "cordis"
+  ],
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "test",
+    "cordis.patch.yml",
+    "LICENSE",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joesl3epy-cloud/dsh-sidebar-marks.git"
+  },
+  "homepage": "https://github.com/joesl3epy-cloud/dsh-sidebar-marks#readme",
+  "bugs": {
+    "url": "https://github.com/joesl3epy-cloud/dsh-sidebar-marks/issues"
+  },
+  "author": "Jankin",
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "dsh-session-manager": ">=0.7.0"
+  },
+  "peerDependenciesMeta": {
+    "dsh-session-manager": {
+      "optional": true
+    }
+  }
+}
