@@ -1,7 +1,7 @@
 {
   "name": "dsh-sidebar-marks",
-  "version": "1.1.4",
-  "description": "在 DSH 侧栏会话上打收藏 / 待回看 / 标签并显示彩色圆点，附带删除会话；兼容 dsh-session-manager",
+  "version": "1.0.0",
+  "description": "Session Marks｜会话标记：极简会话管理：待回看、收藏、跨工作区查找与可恢复删除",
   "type": "module",
   "license": "MIT",
   "keywords": [
@@ -26,7 +26,9 @@
     "test",
     "cordis.patch.yml",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "DEVELOPMENT.md",
+    "CHANGELOG.md"
   ],
   "dsh": {
     "bundle": {
@@ -47,19 +49,11 @@
   "bugs": {
     "url": "https://github.com/joesl3epy-cloud/dsh-sidebar-marks/issues"
   },
-  "author": "Jankin",
+  "author": "Jolyon",
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test test/*.test.mjs"
   },
   "engines": {
-    "node": ">=20"
-  },
-  "peerDependencies": {
-    "dsh-session-manager": ">=0.7.0"
-  },
-  "peerDependenciesMeta": {
-    "dsh-session-manager": {
-      "optional": true
-    }
+    "node": ">=24"
   }
 }

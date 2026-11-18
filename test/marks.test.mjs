@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { __test } from '../lib/index.js';
 
-const { readMarks, readStyle } = __test;
+const { readMarks } = __test;
 
 function tmpFile(name, content) {
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dsm-'));
@@ -72,17 +72,6 @@ test('priority 只在是数字时透传，否则为 null', () => {
 	assert.equal(r.sessions.b.priority, null);
 });
 
-test('readStyle 合并用户配置，缺省回落到默认值', () => {
-	const file = tmpFile('style.json', JSON.stringify({ displayMode: 'single', colorLater: '#cf8a7c' }));
-	const st = readStyle(file);
-	assert.equal(st.displayMode, 'single');
-	assert.equal(st.colorLater, '#cf8a7c');
-	// 没写的键必须还在
-	assert.equal(typeof st.dotSize, 'number');
-	assert.equal(st.priority.length, 3);
-	assert.equal(st.tagPalette.length, 8);
-});
-
 test('写入自己的文件：打开待回看能在合并结果里读到', async () => {
 	const own = tmpFile('own.json', JSON.stringify({ version: 1, sessions: {} }));
 	const { applyMark } = __test;
@@ -107,7 +96,7 @@ test('两侧都标同一会话时按「或」合并，标签取并集', () => {
 	assert.deepEqual(r.sessions.s1.tags.sort(), ['mine', 'theirs']);
 });
 
-test('全部关掉后该会话从自己的文件里消失', () => {
+test('全部关掉后保留本地取消记录，合并结果不再显示', () => {
 	const own = tmpFile('own3.json', JSON.stringify({
 		version: 1,
 		sessions: { s2: { reviewLater: true } },
@@ -116,29 +105,32 @@ test('全部关掉后该会话从自己的文件里消失', () => {
 	const r = applyMark({ sessionId: 's2', reviewLater: false, favorite: false, tags: [] }, own);
 	assert.equal(r.session, null);
 	const after = JSON.parse(fs.readFileSync(own, 'utf8'));
-	assert.equal(after.sessions.s2, undefined);
+	assert.equal(after.sessions.s2.reviewLater, false);
+	assert.equal(after.sessions.s2.overrides.reviewLater, true);
 });
 
-test('改颜色只接受合法 #rrggbb，坏值被忽略而不是整份拒掉', () => {
-	const file = tmpFile('style2.json', JSON.stringify({ colorLater: '#ec7a70' }));
-	const { applyStylePatch } = __test;
-	const r = applyStylePatch({ colorLater: '#cf8a7c', colorFavorite: 'red' }, file);
-	assert.equal(r.style.colorLater, '#cf8a7c');
-	assert.equal(r.style.colorFavorite, '#d9a94e');
+test('显式取消能覆盖共享收藏；清除后不会因共享标记复活', () => {
+ const own = tmpFile('override.json', JSON.stringify({ sessions: {} }));
+ const shared = tmpFile('shared.json', JSON.stringify({ sessions: { demo: { favorite: true, tags: ['共享'] } } }));
+ __test.applyMark({ sessionId: 'demo', favorite: false }, own);
+ assert.deepEqual(readMarks(own, shared).sessions.demo.marks, ['tag']);
+ __test.applyMark({ sessionId: 'demo', clear: true }, own);
+ assert.equal(readMarks(own, shared).sessions.demo, undefined);
 });
-
-test('priority 必须是三个互不相同的合法值，否则保持原样', () => {
-	const file = tmpFile('style3.json', JSON.stringify({}));
-	const { applyStylePatch } = __test;
-	const bad = applyStylePatch({ priority: ['later', 'later', 'tag'] }, file);
-	assert.deepEqual(bad.style.priority, ['later', 'favorite', 'tag']);
-	const good = applyStylePatch({ priority: ['tag', 'later', 'favorite'] }, file);
-	assert.deepEqual(good.style.priority, ['tag', 'later', 'favorite']);
+test('坏标记文件禁止覆盖，危险对象键拒绝写入', () => {
+ const own = tmpFile('broken.json', '{bad');
+ assert.equal(__test.applyMark({ sessionId: 'demo', favorite: true }, own).ok, false);
+ assert.equal(fs.readFileSync(own, 'utf8'), '{bad');
+ assert.equal(__test.applyMark({ sessionId: '__proto__', favorite: true }, own).ok, false);
 });
-
-test('displayMode 只收 all / single', () => {
-	const file = tmpFile('style4.json', JSON.stringify({}));
-	const { applyStylePatch } = __test;
-	assert.equal(applyStylePatch({ displayMode: 'both' }, file).style.displayMode, 'all');
-	assert.equal(applyStylePatch({ displayMode: 'single' }, file).style.displayMode, 'single');
+test('标签去重、去空格并忽略非字符串，兼容脏共享数据', () => {
+ const own = tmpFile('tags.json', JSON.stringify({ sessions: {} }));
+ __test.applyMark({ sessionId: 'demo', tags: [' a ', 'a', null, {}, ''] }, own);
+ assert.deepEqual(readMarks(own, own).sessions.demo.tags, ['a']);
+});
+test('远程网页与 null Origin 禁止访问，本地 DSH 页面可访问', () => {
+ assert.equal(__test.trustedOrigin({headers:{origin:'null'}}), false);
+ assert.equal(__test.trustedOrigin({headers:{origin:'https://example.com'}}), false);
+ assert.equal(__test.trustedOrigin({headers:{origin:'dsh-app://index.html'}}), true);
+ assert.equal(__test.trustedOrigin({headers:{}}), true);
 });
